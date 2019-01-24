@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/axios@0.12.0/dist/axios.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lodash@4.13.1/lodash.min.js"></script>
+
+  <!-- <script src="https://cdn.jsdelivr.net/npm/vue"></script> -->
+  <!-- UIkit CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.0.0-rc.19/css/uikit.min.css" />
+
+  <!-- UIkit JS -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.0.0-rc.19/js/uikit.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.0.0-rc.19/js/uikit-icons.min.js"></script>
+
+  <title>NewVue</title>
+
+</head>
+
+<body>
+  <div class="uk-container">
+    <div id="estat" class="uk-section">
+      <input class="uk-input uk-form-medium uk-form-width-medium" v-model="keyword">
+
+      <div v-if="log">{{log}}</div>
+      <div class="uk-grid uk-child-width-1-2@s uk-child-width-1-3@m uk-child-width-1-4@l" uk-grid="masonry:true">
+        <!-- <div class="uk-flex"> -->
+
+        <div v-if="answer" v-for="item in answer" @click="setView(item)" class="uk-card uk-card-default uk-card-body">
+          <!-- <div class="uk-card uk-card-default uk-card-body" v-for="item in answer"> -->
+          <div class="uk-card-header">
+            <div class="uk-card-title">{{item.STATISTICS_NAME}}</div>
+            <!-- <p class="uk-text-meta">{{item.address}}</p> -->
+          </div>
+
+          <p v-if="item" class="uk-text-meta">{{item.TITLE_SPEC.TABLE_NAME}}</p>
+        </div>
+      </div>
+
+      <div v-if="stats">
+        <div v-if="tableInfo" class="table-info">
+          <p class="stat-name">{{tableInfo.STATISTICS_NAME}}</p>
+          <!-- <p class="stat-about uk-text-meta">{{stats.TABLE_INF.TITLE.$}}</p> -->
+        </div>
+        <div v-if="classInfo" class="category">
+          <div v-for="(clOBJ) in classInfo.CLASS_OBJ" @click="setRowCol(clOBJ)" class="uk-card uk-card-default uk-card-body">
+            <div class="uk-card-header">{{clOBJ["@name"]}}</div>
+            <li v-for="(c) in clOBJ.CLASS" class="uk-label uk-margin-small-right">{{c["@name"]}}</li>
+          </div>
+        </div>
+        <div class="uk-overflow-auto">
+          <table v-if="tableInfo" class="uk-table uk-table-small uk-table-striped">
+            <caption class="stat-about uk-text-meta">{{tableInfo.TITLE.$}}</caption>
+            <thead v-if="col">
+              <tr>
+                <th></th>
+                <th v-for="c in col">{{c["@name"]}}<span v-if="unit">({{unit}})</span></th>
+              </tr>
+            </thead>
+            <tbody v-if="col">
+              <tr v-for="r in row">
+                <td>{{r["@name"]}}</td>
+                <td v-for="c in col">{{getCellValue(r["@code"],c["@code"])}}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div id="viewStats">
+    </div>
+  </div>
+</body>
+
+<script src="..//src/newvue.js"></script>
+
+</html>
