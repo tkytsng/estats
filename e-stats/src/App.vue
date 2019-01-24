@@ -113,7 +113,7 @@
         </table>
       </div>
     </div>
-    <!-- テーブル -->
+    <!-- チャート -->
     <div id="chart" v-if="chartData" style="height:50vh; width:80vw;">
       <Chart :chartData="chartData" :height="400" :width="800"/>
     </div>
@@ -351,7 +351,7 @@ export default {
       const reload = async start => {
         const params = {
           appId: appId,
-          statsDataId: this.statid,
+          statsDataId: this.statid
         };
 
         if (start) params.startPosition = start;
@@ -387,11 +387,11 @@ export default {
         });
 
         if (response.data.GET_STATS_DATA.STATISTICAL_DATA.DATA_INF) {
-          const value = response.data.GET_STATS_DATA.STATISTICAL_DATA.DATA_INF.VALUE;
-          if (!tableDatadataBuffer)
-            tableDatadataBuffer = value;
+          const value =
+            response.data.GET_STATS_DATA.STATISTICAL_DATA.DATA_INF.VALUE;
+          if (!tableDatadataBuffer) tableDatadataBuffer = value;
           else {
-            Array.prototype.push.apply(tableDatadataBuffer,value);
+            Array.prototype.push.apply(tableDatadataBuffer, value);
           }
         }
 
@@ -403,7 +403,7 @@ export default {
         if (next) {
           response = void 0;
           // console.log(next);
-          vm.log = await `残り:${total-next}件`
+          vm.log = await `残り:${total - next}件`;
           await reload(next);
         }
       };
@@ -413,7 +413,7 @@ export default {
       if (tableDatadataBuffer) {
         // vm.dataInfo = await tableDatadataBuffer;
         vm.log = `${total}件読み込みました`;
-        this.setTable(tableDatadataBuffer)
+        this.setTable(tableDatadataBuffer);
       } else {
         vm.log = "データが存在しません";
       }
@@ -444,12 +444,12 @@ export default {
       let tableMap = new Map();
 
       console.time("createMap");
-      let defaultCat= this.defaultCat;
+      let defaultCat = this.defaultCat;
 
-      if(!this.dataInfo) return;
+      // if (!this.dataInfo) return;
 
       // let datas = this.dataInfo
-      for(let data of datas){
+      for (let data of datas) {
         let isvalid = true;
 
         for (const [key, value] of this.defaultCat) {
@@ -460,13 +460,16 @@ export default {
           }
         }
 
-        if(isvalid){
-          let g = {}
-          g["$"] = data["$"]
-          g["@unit"] = data["@unit"]
-          g["@time"] = data["@time"]
+        if (isvalid) {
+          let g = {};
+          g["$"] = data["$"];
+          g["@unit"] = data["@unit"];
+          g["@time"] = data["@time"];
 
-          tableMap.set(String(data["@" + this.rowId] + data["@" + this.colId]), g);
+          tableMap.set(
+            String(data["@" + this.rowId] + data["@" + this.colId]),
+            g
+          );
         }
         data = null;
       }
@@ -488,7 +491,7 @@ export default {
         tableData.push(cols);
       }
       console.timeEnd("createTable");
-
+      console.log(tableData);
       this.tableData = tableData;
       this.currentChartColorHue = 0;
     },
@@ -511,7 +514,7 @@ export default {
       } else {
         this.sortAsc = !this.sortAsc;
       }
-
+      // console.log(tableData);
       this.tableData = tableData;
     },
     setDefault: function(item) {
