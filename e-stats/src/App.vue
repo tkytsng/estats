@@ -113,6 +113,7 @@
         </table>
       </div>
     </div>
+
     <!-- チャート -->
     <div id="chart" v-if="chartData" style="height:50vh; width:80vw;">
       <Chart :chartData="chartData" :height="400" :width="800"/>
@@ -215,6 +216,7 @@ export default {
     },
     getStatsList: function() {
       // this.keyword = keyword;
+
       // 検索ワードに変更があればデータ初期化
       if (!this.statsListNextKey || this.keyword != this.oldKeyword)
         this.initData();
