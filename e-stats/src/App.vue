@@ -216,6 +216,7 @@ export default {
     },
     getStatsList: function() {
       // this.keyword = keyword;
+      // 検索ワードに変更があればデータ初期化
       if (!this.statsListNextKey || this.keyword != this.oldKeyword)
         this.initData();
 
