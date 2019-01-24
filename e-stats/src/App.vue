@@ -113,7 +113,6 @@
         </table>
       </div>
     </div>
-
     <!-- チャート -->
     <div id="chart" v-if="chartData" style="height:50vh; width:80vw;">
       <Chart :chartData="chartData" :height="400" :width="800"/>
