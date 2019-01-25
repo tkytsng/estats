@@ -289,6 +289,15 @@ export default {
         // console.log("this.classInfo.CLASS_OBJ=%o", this.classInfo.CLASS_OBJ);
         let defaultMap = new Map();
 
+        /**
+         * @id = 項目ID
+         * @name = 項目名
+         * CLASS = 小項目オブジェクトの配列
+         * CLASS[N]["@code"] = 小項目コード
+         * CLASS[N]["@lebel"] = 小項目階層レベル
+         * CLASS[N]["@name"] = 小項目名
+         * CLASS[N]["@unit"] = 小項目単位名
+         */
         for (let cl of clsObj) {
           !Array.isArray(cl.CLASS) && (cl.CLASS = [cl.CLASS]);
           // const code = cl.CLASS[0]["@code"];
