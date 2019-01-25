@@ -278,14 +278,18 @@ export default {
           }
         });
 
+        // 統計項目
         this.classInfo = response.data.GET_META_INFO.METADATA_INF.CLASS_INF;
+        const clsObj =
+          response.data.GET_META_INFO.METADATA_INF.CLASS_INF.CLASS_OBJ;
+
         this.answer = "";
         this.log = "";
         this.isSpinnerOn = false;
         // console.log("this.classInfo.CLASS_OBJ=%o", this.classInfo.CLASS_OBJ);
         let defaultMap = new Map();
 
-        for (let cl of this.classInfo.CLASS_OBJ) {
+        for (let cl of clsObj) {
           !Array.isArray(cl.CLASS) && (cl.CLASS = [cl.CLASS]);
           // const code = cl.CLASS[0]["@code"];
           defaultMap.set(cl["@id"], cl.CLASS[0]["@code"]);
