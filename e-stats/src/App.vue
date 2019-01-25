@@ -278,7 +278,7 @@ export default {
           }
         });
 
-        // 統計項目
+        // 統計データのメタ情報
         this.classInfo = response.data.GET_META_INFO.METADATA_INF.CLASS_INF;
         const clsObj =
           response.data.GET_META_INFO.METADATA_INF.CLASS_INF.CLASS_OBJ;
@@ -287,16 +287,18 @@ export default {
         this.log = "";
         this.isSpinnerOn = false;
         // console.log("this.classInfo.CLASS_OBJ=%o", this.classInfo.CLASS_OBJ);
+
+        // テーブルの縦軸と横軸以外の初期値を作成
         let defaultMap = new Map();
 
         /**
-         * @id = 項目ID
-         * @name = 項目名
-         * CLASS = 小項目オブジェクトの配列
-         * CLASS[N]["@code"] = 小項目コード
-         * CLASS[N]["@lebel"] = 小項目階層レベル
-         * CLASS[N]["@name"] = 小項目名
-         * CLASS[N]["@unit"] = 小項目単位名
+         * @id = メタ情報ID
+         * @name = メタ情報名
+         * CLASS = メタ情報の配列
+         * CLASS[N]["@code"] = メタ情報小項目コード
+         * CLASS[N]["@lebel"] = メタ情報小項目階層レベル
+         * CLASS[N]["@name"] = メタ情報小項目名
+         * CLASS[N]["@unit"] = メタ情報小項目単位名
          */
         for (let cl of clsObj) {
           !Array.isArray(cl.CLASS) && (cl.CLASS = [cl.CLASS]);
