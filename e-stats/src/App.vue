@@ -125,11 +125,11 @@
 import debounce from "lodash/debounce";
 
 const urlEstatStatListJson =
-  "http://api.e-stat.go.jp/rest/2.1/app/json/getStatsList";
+  "https://api.e-stat.go.jp/rest/2.1/app/json/getStatsList";
 const urlEstatStatJson =
-  "http://api.e-stat.go.jp/rest/2.1/app/json/getStatsData";
+  "https://api.e-stat.go.jp/rest/2.1/app/json/getStatsData";
 const urlEstatMetaJson =
-  "http://api.e-stat.go.jp/rest/2.1/app/json/getMetaInfo";
+  "https://api.e-stat.go.jp/rest/2.1/app/json/getMetaInfo";
 
 const appId = "cc782ffaf5220d2bb34bab3562595c46c4b62843";
 
