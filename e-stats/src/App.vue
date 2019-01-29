@@ -136,6 +136,7 @@ const appId = "cc782ffaf5220d2bb34bab3562595c46c4b62843";
 import SearchBox from "./components/SearchBox.vue";
 import Log from "./components/Log.vue";
 import Chart from "./components/Chart.vue";
+import firebase from "firebase/app";
 
 export default {
   name: "estats",
@@ -279,9 +280,9 @@ export default {
         });
 
         // 統計データのメタ情報
-        this.classInfo = response.data.GET_META_INFO.METADATA_INF.CLASS_INF;
-        const clsObj =
-          response.data.GET_META_INFO.METADATA_INF.CLASS_INF.CLASS_OBJ;
+        const metaInfo = response.data.GET_META_INFO;
+        this.classInfo = metaInfo.METADATA_INF.CLASS_INF;
+        const clsObj = metaInfo.METADATA_INF.CLASS_INF.CLASS_OBJ;
 
         this.answer = "";
         this.log = "";
