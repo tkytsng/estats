@@ -261,6 +261,7 @@ export default {
       })();
       this.oldKeyword = this.keyword;
     },
+    // 統計情報を取得表示
     setView: function(item, metaData) {
       this.initData();
 
@@ -274,12 +275,16 @@ export default {
       const getStats = async () => {
         // 統計データのメタ情報
         let metaInfo = null;
+
         // CloudFirestore tablesから取得
         const cf_tables = firebase.firestore().collection("tables");
         const cf_stat = await cf_tables.doc(statid).get();
 
+        // 見つからない
         if (!cf_stat.exists) {
-          console.log("${statid}はありません");
+          console.log(`${statid}はありません`);
+
+          metaInfo = response.data.GET_META_INFO;
           // CloudFirestore tablesに書込み
           const cf_result = await cf_tables.doc(statid).set(metaInfo);
           const response = await axios.request({
@@ -290,11 +295,11 @@ export default {
               statsDataId: statid
             }
           });
-
-          metaInfo = response.data.GET_META_INFO;
-        } else {
-          console.log("${statid}が見つかりました");
-          console.log(cf_stat.data());
+        }
+        // 見つかった
+        else {
+          console.log(`${statid}が見つかりました`);
+          metaInfo = cf_stat.data();
         }
 
         this.classInfo = metaInfo.METADATA_INF.CLASS_INF;
@@ -328,6 +333,7 @@ export default {
 
       getStats();
     },
+    // テーブルを作成する行列を設定
     setRowCol: function(item) {
       const clOBJ = item[0];
       const colrow = item[1];
@@ -367,6 +373,8 @@ export default {
             // while (next) {
             //   next = await this.reloadStats(this.defaultCat, this);
             // }
+
+            // 統計を読み込み
             await this.reloadStats(this.defaultCat, this);
 
             this.isSpinnerOn = false;
@@ -377,7 +385,9 @@ export default {
         this.tableData = null;
       }
     },
+    // 統計データを読み込む
     reloadStats: async function(defaultCat) {
+      const statid = this.statid;
       let vm = this;
       vm.isLoadedTableData = false;
       let tableDatadataBuffer = null;
@@ -424,12 +434,16 @@ export default {
         if (response.data.GET_STATS_DATA.STATISTICAL_DATA.DATA_INF) {
           const value =
             response.data.GET_STATS_DATA.STATISTICAL_DATA.DATA_INF.VALUE;
+
+          // 読み込んだデータ
           if (!tableDatadataBuffer) tableDatadataBuffer = value;
           else {
             Array.prototype.push.apply(tableDatadataBuffer, value);
+            // tableDatadataBuffer = (tableDatadataBuffer...,value)
           }
         }
 
+        // すべてのデータを取得できなかった場合、次のインデックスを取得
         const next =
           response.data.GET_STATS_DATA.STATISTICAL_DATA.RESULT_INF.NEXT_KEY;
         total =
@@ -443,11 +457,28 @@ export default {
         }
       };
 
-      await reload();
+      // CloudFirestore tablesから取得
+      const cf_stats = firebase.firestore().collection("stats");
+      const cf_statDoc = await cf_stats.doc(statid).get();
 
+      if (!cf_statDoc.exists) {
+        console.log(`${statid}が見つかりません`);
+        await reload();
+        if (tableDatadataBuffer) {
+          // const cf_result = await cf_stats
+          //   .doc(statid)
+          //   .set({ tableDatadataBuffer });
+        }
+      } else {
+        console.log(`${statid}が見つかりました`);
+        tableDatadataBuffer = cf_statDoc.data();
+      }
+
+      console.log(tableDatadataBuffer.length);
       if (tableDatadataBuffer) {
         // vm.dataInfo = await tableDatadataBuffer;
         vm.log = `${total}件読み込みました`;
+
         this.setTable(tableDatadataBuffer);
       } else {
         vm.log = "データが存在しません";
@@ -457,6 +488,7 @@ export default {
       vm.isSpinnerOn = await false;
       // vm.isLoadedTableData = await true;
     },
+    // テーブルを表示
     setTable: function(datas) {
       const getValue = (ri, ci, tblmap) => {
         let retVal = tblmap.get(ri + ci);
@@ -526,7 +558,7 @@ export default {
         tableData.push(cols);
       }
       console.timeEnd("createTable");
-      console.log(tableData);
+
       this.tableData = tableData;
       this.currentChartColorHue = 0;
     },
