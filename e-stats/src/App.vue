@@ -458,23 +458,35 @@ export default {
       };
 
       // CloudFirestore tablesから取得
-      const cf_stats = firebase.firestore().collection("stats");
-      const cf_statDoc = await cf_stats.doc(statid).get();
+      const cf_stat = await firebase.firestore().collection(statid);
+      // console.log(cf_stats);
+      // const cf_statDoc = await cf_stats.doc(statid).get();
 
-      if (!cf_statDoc.exists) {
+      if (!cf_stat.exists) {
         console.log(`${statid}が見つかりません`);
         await reload();
         if (tableDatadataBuffer) {
           // const cf_result = await cf_stats
           //   .doc(statid)
-          //   .set({ tableDatadataBuffer });
+          //   .set({ ...tableDatadataBuffer });
+          // let idx = 0;
+          const cf_stats = await firebase.firestore().collection(statid);
+
+          // for (let i = 0; i < tableDatadataBuffer.length; i++) {
+          //   cf_stats
+          //     .doc(i.toString().padStart(10, "0"))
+          //     .set(tableDatadataBuffer[i]);
+          // }
+
+          // tableDatadataBuffer.forEach((data, i) => {
+          //   cf_stats.doc(i).set(data);
+          // });
         }
       } else {
         console.log(`${statid}が見つかりました`);
         tableDatadataBuffer = cf_statDoc.data();
       }
 
-      console.log(tableDatadataBuffer.length);
       if (tableDatadataBuffer) {
         // vm.dataInfo = await tableDatadataBuffer;
         vm.log = `${total}件読み込みました`;
