@@ -136,7 +136,7 @@ const appId = "cc782ffaf5220d2bb34bab3562595c46c4b62843";
 import SearchBox from "./components/SearchBox.vue";
 import Log from "./components/Log.vue";
 import Chart from "./components/Chart.vue";
-import firebase from "firebase/app";
+import firebase from "@/firebase/firestore";
 
 export default {
   name: "estats",
