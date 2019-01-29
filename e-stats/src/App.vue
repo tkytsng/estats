@@ -264,23 +264,39 @@ export default {
     setView: function(item, metaData) {
       this.initData();
 
+      // 取得する統計のID
       const statid = (this.statid = item["@id"]);
 
+      // 表示用
       this.log = "統計データ取得中";
       this.isSpinnerOn = true;
 
       const getStats = async () => {
-        const response = await axios.request({
-          url: urlEstatMetaJson,
-          // url: urlEstatStatJson,
-          params: {
-            appId: appId,
-            statsDataId: statid
-          }
-        });
-
         // 統計データのメタ情報
-        const metaInfo = response.data.GET_META_INFO;
+        let metaInfo = null;
+        // CloudFirestore tablesから取得
+        const cf_tables = firebase.firestore().collection("tables");
+        const cf_stat = await cf_tables.doc(statid).get();
+
+        if (!cf_stat.exists) {
+          console.log("${statid}はありません");
+          // CloudFirestore tablesに書込み
+          const cf_result = await cf_tables.doc(statid).set(metaInfo);
+          const response = await axios.request({
+            url: urlEstatMetaJson,
+            // url: urlEstatStatJson,
+            params: {
+              appId: appId,
+              statsDataId: statid
+            }
+          });
+
+          metaInfo = response.data.GET_META_INFO;
+        } else {
+          console.log("${statid}が見つかりました");
+          console.log(cf_stat.data());
+        }
+
         this.classInfo = metaInfo.METADATA_INF.CLASS_INF;
         const clsObj = metaInfo.METADATA_INF.CLASS_INF.CLASS_OBJ;
 
