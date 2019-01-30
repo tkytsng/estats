@@ -465,6 +465,7 @@ export default {
           const value =
             response.data.GET_STATS_DATA.STATISTICAL_DATA.DATA_INF.VALUE;
 
+          // 取得したデータを圧縮してバッファに追加
           for (const td of value) {
             const d = {};
             d[`$`] = td[`$`];
@@ -474,14 +475,6 @@ export default {
             d[`@${vm.colId}`] = td[`@${vm.colId}`];
             tableDatadataBuffer.push(d);
           }
-          // // 読み込んだデータ
-          // if (!tableDatadataBuffer) {
-
-          //   tableDatadataBuffer = value;
-          // } else {
-          //   Array.prototype.push.apply(tableDatadataBuffer, value);
-          //   // tableDatadataBuffer = (tableDatadataBuffer,...value)
-          // }
         }
 
         // すべてのデータを取得できなかった場合、次のインデックスを取得
@@ -497,37 +490,6 @@ export default {
           await reload(next);
         }
       };
-
-      // CloudFirestore tablesから取得
-      const cf_stats = await firebase.firestore().collection(`stat${statid}`);
-      // console.log(cf_stats);
-      // const cf_statDoc = await cf_stats.doc(statid).get();
-
-      if (!cf_stats.exists) {
-        console.log(`stat${statid}が見つかりません`);
-        await reload();
-
-        // if (tableDatadataBuffer) {
-        //   const tableDataValue = {};
-        //   for (const td of tableDatadataBuffer) {
-        //     const key = "";
-        //     for (const p of Object.keys(td)) {
-        //       // console.log(p);
-        //       // console.log(td[p]);
-        //       if (p !== "$") {
-        //         key += `+${p}=${td[p]}`;
-        //       }
-        //     }
-        //     tableDataValue;
-        //   }
-        //   // const cf_result = await cf_stats
-        //   //   .doc(statid)
-        //   //   .set({ ...tableDatadataBuffer });
-        // }
-      } else {
-        console.log(`stat${statid}が見つかりました`);
-        tableDatadataBuffer = cf_statDoc.data();
-      }
 
       if (tableDatadataBuffer) {
         // vm.dataInfo = await tableDatadataBuffer;
@@ -553,10 +515,10 @@ export default {
           retVal.value = retVal["$"];
           if (retVal["$"]) retVal.tooltip = retVal["$"];
           if (retVal["@unit"]) retVal.tooltip += retVal["@unit"];
-          if (retVal["@time"])
-            retVal.tooltip += `\n${new Date(
-              retVal["@time"].substr(0, 4)
-            ).getFullYear()}年`;
+          // if (retVal["@time"])
+          //   retVal.tooltip += `\n${new Date(
+          //     retVal["@time"].substr(0, 4)
+          //   ).getFullYear()}年`;
         } else retVal = { value: "n/a" };
         return retVal;
       };
@@ -571,7 +533,7 @@ export default {
       // if (!this.dataInfo) return;
 
       // let datas = this.dataInfo
-      for (let data of datas) {
+      for (const data of datas) {
         // let isvalid = true;
 
         // console.log(data);
@@ -586,13 +548,13 @@ export default {
         // }
 
         // if (isvalid) {
+        // console.log(
+        //   `${data["@" + this.rowId]}${data["@" + this.colId]}:${g["$"]}`
+        // );
         let g = {};
         g["$"] = data["$"];
         g["@unit"] = data["@unit"];
         g["@time"] = data["@time"];
-        // console.log(
-        //   `${data["@" + this.rowId]}${data["@" + this.colId]}:${g["$"]}`
-        // );
 
         tableMap.set(
           String(data["@" + this.rowId] + data["@" + this.colId]),
@@ -600,10 +562,41 @@ export default {
         );
         // }
       }
+
       // console.timeEnd("createMap");
       // this.dataInfo = null;
 
-      console.time("createTable");
+      // console.time("createTable");
+
+      // CloudFirestore tablesから取得
+      const cf_stats = firebase.firestore().collection(`stats`);
+      // console.log(cf_stats);
+      const cf_statDoc = await cf_stats.doc(statid).get();
+
+      if (!cf_stats.exists) {
+        console.log(`stat${statid}が見つかりません`);
+
+        // if (tableDatadataBuffer) {
+        //   const tableDataValue = {};
+        //   for (const td of tableDatadataBuffer) {
+        //     const key = "";
+        //     for (const p of Object.keys(td)) {
+        //       // console.log(p);
+        //       // console.log(td[p]);
+        //       if (p !== "$") {
+        //         key += `+${p}=${td[p]}`;
+        //       }
+        //     }
+        //     tableDataValue;
+        //   }
+        //   // const cf_result = await cf_stats
+        //   //   .doc(statid)
+        //   //   .set({ ...tableDatadataBuffer });
+        // }
+      } else {
+        console.log(`stat${statid}が見つかりました`);
+        tableDatadataBuffer = cf_statDoc.data();
+      }
 
       // テーブル表示用の配列を作成
       let tableData = [];
@@ -616,7 +609,7 @@ export default {
         }
         tableData.push(cols);
       }
-      console.timeEnd("createTable");
+      // console.timeEnd("createTable");
 
       this.tableData = tableData;
       this.currentChartColorHue = 0;
