@@ -36,44 +36,56 @@
 
     <div v-if="classInfo" class="category uk-section-small">
       <ul class="uk-list uk-list-divider">
+        <!-- 統計の各項目 -->
         <li v-for="clOBJ in classInfo.CLASS_OBJ" :key="clOBJ.id" class>
           <!-- <li v-for="clOBJ in classInfo.CLASS_OBJ" :key="clOBJ.id" class="uk-card uk-card-default uk-card-body"> -->
           <div uk-grid class="uk-flex">
+            <!-- 項目名 -->
             <div class="uk-width-1-5@m uk-width-1-4@s uk-margin-auto-vertical">
               {{clOBJ["@name"]}}
               <!-- <p class="uk-margin-auto-vertical"></p> -->
             </div>
+            <!-- テーブルの縦横選択ボタン -->
             <div class="uk-button-group uk-inline uk-margin-auto-vertical">
+              <!-- 横 -->
+              <!-- 選択済み -->
               <button
                 v-if="clOBJ['@id'] === colId"
                 class="uk-button uk-button-small uk-button-primary"
                 @click.stop="setRowCol([clOBJ,0])"
               >yoko</button>
+              <!-- 選択不可 -->
               <button
                 v-else-if="isColSet"
                 class="uk-button uk-button-small uk-button-default uk-disabled"
               >yoko</button>
+              <!-- 選択可 -->
               <button
                 v-else
                 class="uk-button uk-button-small uk-button-default"
                 @click.stop="setRowCol([clOBJ,0])"
               >yoko</button>
-              
+
+              <!-- 縦 -->
+              <!-- 選択済み -->
               <button
                 v-if="clOBJ['@id'] === rowId"
                 class="uk-button uk-button-small uk-button-primary"
                 @click.stop="setRowCol([clOBJ,1])"
               >tate</button>
+              <!-- 選択不可 -->
               <button
                 v-else-if="isRowSet"
                 class="uk-button uk-button-small uk-button-default uk-disabled"
               >tate</button>
+              <!-- 選択可 -->
               <button
                 v-else
                 class="uk-button uk-button-small uk-button-default"
                 @click.stop="setRowCol([clOBJ,1])"
               >tate</button>
             </div>
+            <!-- 縦横以外の項目で表示するデータ -->
             <div>
               <select
                 class="uk-select uk-form-width-medium"
@@ -284,9 +296,6 @@ export default {
         if (!cf_stat.exists) {
           console.log(`${statid}はありません`);
 
-          metaInfo = response.data.GET_META_INFO;
-          // CloudFirestore tablesに書込み
-          const cf_result = await cf_tables.doc(statid).set(metaInfo);
           const response = await axios.request({
             url: urlEstatMetaJson,
             // url: urlEstatStatJson,
@@ -295,6 +304,9 @@ export default {
               statsDataId: statid
             }
           });
+          metaInfo = response.data.GET_META_INFO;
+          // CloudFirestore tablesに書込み
+          const cf_result = await cf_tables.doc(statid).set(metaInfo);
         }
         // 見つかった
         else {
@@ -334,6 +346,7 @@ export default {
       getStats();
     },
     // テーブルを作成する行列を設定
+    // 縦横ボタンで動作
     setRowCol: function(item) {
       const clOBJ = item[0];
       const colrow = item[1];
@@ -390,57 +403,85 @@ export default {
       const statid = this.statid;
       let vm = this;
       vm.isLoadedTableData = false;
-      let tableDatadataBuffer = null;
+      const tableDatadataBuffer = [];
       let total = 0;
 
-      const reload = async start => {
-        const params = {
-          appId: appId,
-          statsDataId: this.statid
-        };
+      // パラメータセット
+      const params = {
+        appId: appId,
+        statsDataId: this.statid
+      };
 
-        if (start) params.startPosition = start;
-
+      {
         const props = ["Tab", "Time", "Area"];
         for (const prop of props) {
           const lower = prop.toLowerCase();
+
           if (
             defaultCat.has(lower) &&
             vm.rowId !== lower &&
             vm.colId !== lower
           ) {
-            params[[`cd${prop}`]] = defaultCat.get(prop);
+            params[[`cd${prop}`]] = defaultCat.get(lower);
           }
         }
 
-        let i = 1;
-        let key;
-        let hasKey;
+        // let i = 1;
+        // let key;
+        // let hasKey;
 
-        do {
-          key = "cat" + (i++).toString().padStart(2, 0);
-          let hasKey = vm.defaultCat.has(key);
+        // do {
+        //   key = `cat${(i++).toString().padStart(2, 0)}`;
+        //   hasKey = defaultCat.has(key);
 
-          if (vm.rowId !== key && vm.colId !== key) {
-            params[["cd" + key.replace("cat", "Cat")]] = defaultCat.get(key);
+        //   console.log(`${key}:${vm.rowId}:${vm.colId}`);
+        //   console.log(hasKey);
+        //   if (vm.rowId !== key && vm.colId !== key && hasKey) {
+        //     params[["cd" + key.replace("cat", "Cat")]] = defaultCat.get(key);
+        //   }
+        // } while (hasKey);
+
+        for (let i = 1, hasKey = true; hasKey; i++) {
+          const key = `cat${i.toString().padStart(2, 0)}`;
+          hasKey = defaultCat.has(key);
+
+          if (vm.rowId !== key && vm.colId !== key && hasKey) {
+            params[[`cd${key.replace("cat", "Cat")}`]] = defaultCat.get(key);
           }
-        } while (hasKey);
+        }
+      }
 
+      const reload = async start => {
+        if (start) params.startPosition = start;
+
+        // APIでデータ取得
         let response = await axios.request({
           url: urlEstatStatJson,
           params: params
         });
+        // console.log(params);
 
         if (response.data.GET_STATS_DATA.STATISTICAL_DATA.DATA_INF) {
           const value =
             response.data.GET_STATS_DATA.STATISTICAL_DATA.DATA_INF.VALUE;
 
-          // 読み込んだデータ
-          if (!tableDatadataBuffer) tableDatadataBuffer = value;
-          else {
-            Array.prototype.push.apply(tableDatadataBuffer, value);
-            // tableDatadataBuffer = (tableDatadataBuffer...,value)
+          for (const td of value) {
+            const d = {};
+            d[`$`] = td[`$`];
+            d[`@unit`] = td[`@unit`];
+            // d[`@time`] = td[`@time`];
+            d[`@${vm.rowId}`] = td[`@${vm.rowId}`];
+            d[`@${vm.colId}`] = td[`@${vm.colId}`];
+            tableDatadataBuffer.push(d);
           }
+          // // 読み込んだデータ
+          // if (!tableDatadataBuffer) {
+
+          //   tableDatadataBuffer = value;
+          // } else {
+          //   Array.prototype.push.apply(tableDatadataBuffer, value);
+          //   // tableDatadataBuffer = (tableDatadataBuffer,...value)
+          // }
         }
 
         // すべてのデータを取得できなかった場合、次のインデックスを取得
@@ -458,38 +499,40 @@ export default {
       };
 
       // CloudFirestore tablesから取得
-      const cf_stat = await firebase.firestore().collection(statid);
+      const cf_stats = await firebase.firestore().collection(`stat${statid}`);
       // console.log(cf_stats);
       // const cf_statDoc = await cf_stats.doc(statid).get();
 
-      if (!cf_stat.exists) {
-        console.log(`${statid}が見つかりません`);
+      if (!cf_stats.exists) {
+        console.log(`stat${statid}が見つかりません`);
         await reload();
-        if (tableDatadataBuffer) {
-          // const cf_result = await cf_stats
-          //   .doc(statid)
-          //   .set({ ...tableDatadataBuffer });
-          // let idx = 0;
-          const cf_stats = await firebase.firestore().collection(statid);
 
-          // for (let i = 0; i < tableDatadataBuffer.length; i++) {
-          //   cf_stats
-          //     .doc(i.toString().padStart(10, "0"))
-          //     .set(tableDatadataBuffer[i]);
-          // }
-
-          // tableDatadataBuffer.forEach((data, i) => {
-          //   cf_stats.doc(i).set(data);
-          // });
-        }
+        // if (tableDatadataBuffer) {
+        //   const tableDataValue = {};
+        //   for (const td of tableDatadataBuffer) {
+        //     const key = "";
+        //     for (const p of Object.keys(td)) {
+        //       // console.log(p);
+        //       // console.log(td[p]);
+        //       if (p !== "$") {
+        //         key += `+${p}=${td[p]}`;
+        //       }
+        //     }
+        //     tableDataValue;
+        //   }
+        //   // const cf_result = await cf_stats
+        //   //   .doc(statid)
+        //   //   .set({ ...tableDatadataBuffer });
+        // }
       } else {
-        console.log(`${statid}が見つかりました`);
+        console.log(`stat${statid}が見つかりました`);
         tableDatadataBuffer = cf_statDoc.data();
       }
 
       if (tableDatadataBuffer) {
         // vm.dataInfo = await tableDatadataBuffer;
         vm.log = `${total}件読み込みました`;
+        // console.log(tableDatadataBuffer);
 
         this.setTable(tableDatadataBuffer);
       } else {
@@ -529,31 +572,35 @@ export default {
 
       // let datas = this.dataInfo
       for (let data of datas) {
-        let isvalid = true;
+        // let isvalid = true;
 
-        for (const [key, value] of this.defaultCat) {
-          const d = data[["@" + key]];
-          if (key !== this.rowId && key !== this.colId && d !== value) {
-            isvalid = false;
-            break;
-          }
-        }
+        // console.log(data);
+        // for (const [key, value] of this.defaultCat) {
+        //   const d = data[["@" + key]];
+        //   // console.log(`${this.rowId}:${this.colId}:${key}:${value}:${d}`);
 
-        if (isvalid) {
-          let g = {};
-          g["$"] = data["$"];
-          g["@unit"] = data["@unit"];
-          g["@time"] = data["@time"];
+        //   if (key !== this.rowId && key !== this.colId && d !== value) {
+        //     isvalid = false;
+        //     break;
+        //   }
+        // }
 
-          tableMap.set(
-            String(data["@" + this.rowId] + data["@" + this.colId]),
-            g
-          );
-        }
-        data = null;
+        // if (isvalid) {
+        let g = {};
+        g["$"] = data["$"];
+        g["@unit"] = data["@unit"];
+        g["@time"] = data["@time"];
+        // console.log(
+        //   `${data["@" + this.rowId]}${data["@" + this.colId]}:${g["$"]}`
+        // );
+
+        tableMap.set(
+          String(data["@" + this.rowId] + data["@" + this.colId]),
+          g
+        );
+        // }
       }
-      console.timeEnd("createMap");
-
+      // console.timeEnd("createMap");
       // this.dataInfo = null;
 
       console.time("createTable");
