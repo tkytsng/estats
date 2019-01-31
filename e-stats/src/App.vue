@@ -435,21 +435,6 @@ export default {
           }
         }
 
-        // let i = 1;
-        // let key;
-        // let hasKey;
-
-        // do {
-        //   key = `cat${(i++).toString().padStart(2, 0)}`;
-        //   hasKey = defaultCat.has(key);
-
-        //   console.log(`${key}:${vm.rowId}:${vm.colId}`);
-        //   console.log(hasKey);
-        //   if (vm.rowId !== key && vm.colId !== key && hasKey) {
-        //     params[["cd" + key.replace("cat", "Cat")]] = defaultCat.get(key);
-        //   }
-        // } while (hasKey);
-
         for (let i = 1, hasKey = true; hasKey; i++) {
           const key = `cat${i.toString().padStart(2, 0)}`;
           // hasKey = defaultCat.has(key);
@@ -502,6 +487,15 @@ export default {
         }
       };
 
+      const statRef = await firebase.firestore().collection(`stat${statid}`);
+      const queryRef = await statRef
+        .where(`rowId`, "==", this.rowId)
+        .where(`colId`, `==`, this.colId)
+        .where(`defaultValues`, `==`, this.defaultValues)
+        .get();
+
+      await console.log(queryRef);
+
       await getStats();
 
       if (tableDatadataBuffer) {
@@ -520,12 +514,9 @@ export default {
     setTable: function(datas) {
       const statid = this.statid;
 
-      const getValue = (ri, ci, tblmap) => {
-        // let retVal = tblmap.get(ri + ci);
-        let retVal = tblmap[[ri + ci]];
-        // tblmap.delete(ri + ci);
-        delete tblmap[[ri + ci]];
-        // console.log(retVal);
+      const getValue = (ri, ci, table) => {
+        let retVal = table[[ri + ci]];
+        delete table[[ri + ci]];
 
         if (retVal) {
           retVal.value = retVal["$"];
@@ -549,54 +540,32 @@ export default {
 
       // let datas = this.dataInfo
       for (const data of datas) {
-        // let isvalid = true;
-
-        // console.log(data);
-        // for (const [key, value] of this.defaultCat) {
-        //   const d = data[["@" + key]];
-        //   // console.log(`${this.rowId}:${this.colId}:${key}:${value}:${d}`);
-
-        //   if (key !== this.rowId && key !== this.colId && d !== value) {
-        //     isvalid = false;
-        //     break;
-        //   }
-        // }
-
-        // if (isvalid) {
-        // console.log(
-        //   `${data["@" + this.rowId]}${data["@" + this.colId]}:${g["$"]}`
-        // );
         let g = {};
         g["$"] = data["$"];
         g["@unit"] = data["@unit"];
-        g["@time"] = data["@time"];
+        // g["@time"] = data["@time"];
 
-        // tableMap.set(
-        //   String(data["@" + this.rowId] + data["@" + this.colId]),
-        //   g
-        // );
         table[[String(data["@" + this.rowId] + data["@" + this.colId])]] = g;
-        // }
       }
 
       (async () => {
-        const cfTable = { ...table };
+        const cfTable = JSON.parse(JSON.stringify(table));
         const defaultValues = this.defaultValues;
         // CloudFirestore statsから取得
         const statRef = await firebase.firestore().collection(`stat${statid}`);
         const queryRef = await statRef
           .where(`rowId`, "==", this.rowId)
           .where(`colId`, `==`, this.colId)
-          .where(`default`, `==`, this.defaultValues)
+          .where(`defaultValues`, `==`, this.defaultValues)
           .get();
 
         // console.table(cfTable);
-        console.log(queryRef);
+        // console.log(queryRef);
         if (queryRef.empty) {
           console.log(`stat${statid}が見つかりません`);
-          // console.log(cfTable);
+          // console.table(cfTable);
 
-          statRef.add({
+          await statRef.add({
             rowId: this.rowId,
             colId: this.colId,
             defaultValues: this.defaultValues,
@@ -610,13 +579,14 @@ export default {
 
       // テーブル表示用の配列を作成
       let tableData = [];
+      // let cloneTable = { ...table };
+      // console.log("getValue");
       for (const r of this.row) {
         let cols = [];
         cols.push({ value: r["@name"] });
         for (let c of this.col) {
           // cols.push(getValue(r["@code"], c["@code"], tableMap));
           cols.push(getValue(r["@code"], c["@code"], table));
-          // console.log("r=%o/c=%o", r["@code"], c["@code"]);
         }
         tableData.push(cols);
       }
