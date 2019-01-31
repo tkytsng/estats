@@ -170,6 +170,7 @@ export default {
       dataInfo: null,
       tableData: null,
       defaultCat: {},
+      defaultValues: {},
       rowId: "",
       colId: "",
       row: null,
@@ -217,6 +218,7 @@ export default {
       this.rowId = null;
       this.colId = null;
       this.defaultCat = {};
+      this.defaultValues = {};
       this.unit = null;
       this.log = "";
       this.isSpinnerOn = false;
@@ -324,6 +326,7 @@ export default {
 
         // テーブルの縦軸と横軸以外の初期値を作成
         let defaultMap = new Map();
+        const defaultVals = {};
 
         /**
          * @id = メタ情報ID
@@ -338,9 +341,11 @@ export default {
           !Array.isArray(cl.CLASS) && (cl.CLASS = [cl.CLASS]);
           // const code = cl.CLASS[0]["@code"];
           defaultMap.set(cl["@id"], cl.CLASS[0]["@code"]);
+          defaultVals[[cl["@id"]]] = cl.CLASS[0]["@code"];
         }
 
         this.defaultCat = defaultMap;
+        this.defaultValues = defaultVals;
       };
 
       getStats();
@@ -388,7 +393,8 @@ export default {
             // }
 
             // 統計を読み込み
-            await this.reloadStats(this.defaultCat, this);
+            // await this.reloadStats(this.defaultCat, this);
+            await this.reloadStats(this.defaultValues, this);
 
             this.isSpinnerOn = false;
           })();
@@ -399,7 +405,8 @@ export default {
       }
     },
     // 統計データを読み込む
-    reloadStats: async function(defaultCat) {
+    // reloadStats: async function(defaultCat) {
+    reloadStats: async function(defaultValues) {
       const statid = this.statid;
       let vm = this;
       vm.isLoadedTableData = false;
@@ -418,11 +425,13 @@ export default {
           const lower = prop.toLowerCase();
 
           if (
-            defaultCat.has(lower) &&
+            // defaultCat.has(lower) &&
+            defaultValues[lower] &&
             vm.rowId !== lower &&
             vm.colId !== lower
           ) {
-            params[[`cd${prop}`]] = defaultCat.get(lower);
+            // params[[`cd${prop}`]] = defaultCat.get(lower);
+            params[[`cd${prop}`]] = defaultValues[lower];
           }
         }
 
@@ -443,15 +452,17 @@ export default {
 
         for (let i = 1, hasKey = true; hasKey; i++) {
           const key = `cat${i.toString().padStart(2, 0)}`;
-          hasKey = defaultCat.has(key);
+          // hasKey = defaultCat.has(key);
+          hasKey = defaultValues[key];
 
           if (vm.rowId !== key && vm.colId !== key && hasKey) {
-            params[[`cd${key.replace("cat", "Cat")}`]] = defaultCat.get(key);
+            // params[[`cd${key.replace("cat", "Cat")}`]] = defaultCat.get(key);
+            params[[`cd${key.replace("cat", "Cat")}`]] = defaultValues[key];
           }
         }
       }
 
-      const reload = async start => {
+      const getStats = async start => {
         if (start) params.startPosition = start;
 
         // APIでデータ取得
@@ -487,9 +498,11 @@ export default {
           response = void 0;
           // console.log(next);
           vm.log = await `残り:${total - next}件`;
-          await reload(next);
+          await getStats(next);
         }
       };
+
+      await getStats();
 
       if (tableDatadataBuffer) {
         // vm.dataInfo = await tableDatadataBuffer;
@@ -501,15 +514,18 @@ export default {
         vm.log = "データが存在しません";
       }
 
-      // vm.log = response.data.GET_STATS_LIST;
       vm.isSpinnerOn = await false;
-      // vm.isLoadedTableData = await true;
     },
     // テーブルを表示
     setTable: function(datas) {
+      const statid = this.statid;
+
       const getValue = (ri, ci, tblmap) => {
-        let retVal = tblmap.get(ri + ci);
-        tblmap.delete(ri + ci);
+        // let retVal = tblmap.get(ri + ci);
+        let retVal = tblmap[[ri + ci]];
+        // tblmap.delete(ri + ci);
+        delete tblmap[[ri + ci]];
+        // console.log(retVal);
 
         if (retVal) {
           retVal.value = retVal["$"];
@@ -525,12 +541,11 @@ export default {
 
       this.chartData = null;
 
-      let tableMap = new Map();
+      // let tableMap = new Map();
+      const table = {};
 
-      console.time("createMap");
-      let defaultCat = this.defaultCat;
-
-      // if (!this.dataInfo) return;
+      // console.time("createMap");
+      // let defaultCat = this.defaultCat;
 
       // let datas = this.dataInfo
       for (const data of datas) {
@@ -556,47 +571,42 @@ export default {
         g["@unit"] = data["@unit"];
         g["@time"] = data["@time"];
 
-        tableMap.set(
-          String(data["@" + this.rowId] + data["@" + this.colId]),
-          g
-        );
+        // tableMap.set(
+        //   String(data["@" + this.rowId] + data["@" + this.colId]),
+        //   g
+        // );
+        table[[String(data["@" + this.rowId] + data["@" + this.colId])]] = g;
         // }
       }
 
-      // console.timeEnd("createMap");
-      // this.dataInfo = null;
+      (async () => {
+        const cfTable = { ...table };
+        const defaultValues = this.defaultValues;
+        // CloudFirestore statsから取得
+        const statRef = await firebase.firestore().collection(`stat${statid}`);
+        const queryRef = await statRef
+          .where(`rowId`, "==", this.rowId)
+          .where(`colId`, `==`, this.colId)
+          .where(`default`, `==`, this.defaultValues)
+          .get();
 
-      // console.time("createTable");
+        // console.table(cfTable);
+        console.log(queryRef);
+        if (queryRef.empty) {
+          console.log(`stat${statid}が見つかりません`);
+          // console.log(cfTable);
 
-      // CloudFirestore tablesから取得
-      const cf_stats = firebase.firestore().collection(`stats`);
-      // console.log(cf_stats);
-      const cf_statDoc = await cf_stats.doc(statid).get();
-
-      if (!cf_stats.exists) {
-        console.log(`stat${statid}が見つかりません`);
-
-        // if (tableDatadataBuffer) {
-        //   const tableDataValue = {};
-        //   for (const td of tableDatadataBuffer) {
-        //     const key = "";
-        //     for (const p of Object.keys(td)) {
-        //       // console.log(p);
-        //       // console.log(td[p]);
-        //       if (p !== "$") {
-        //         key += `+${p}=${td[p]}`;
-        //       }
-        //     }
-        //     tableDataValue;
-        //   }
-        //   // const cf_result = await cf_stats
-        //   //   .doc(statid)
-        //   //   .set({ ...tableDatadataBuffer });
-        // }
-      } else {
-        console.log(`stat${statid}が見つかりました`);
-        tableDatadataBuffer = cf_statDoc.data();
-      }
+          statRef.add({
+            rowId: this.rowId,
+            colId: this.colId,
+            defaultValues: this.defaultValues,
+            table: cfTable
+          });
+        } else {
+          console.log(`stat${statid}が見つかりました`);
+          // tableDatadataBuffer = cf_statDoc.data();
+        }
+      })();
 
       // テーブル表示用の配列を作成
       let tableData = [];
@@ -604,7 +614,8 @@ export default {
         let cols = [];
         cols.push({ value: r["@name"] });
         for (let c of this.col) {
-          cols.push(getValue(r["@code"], c["@code"], tableMap));
+          // cols.push(getValue(r["@code"], c["@code"], tableMap));
+          cols.push(getValue(r["@code"], c["@code"], table));
           // console.log("r=%o/c=%o", r["@code"], c["@code"]);
         }
         tableData.push(cols);
@@ -637,14 +648,17 @@ export default {
       this.tableData = tableData;
     },
     setDefault: function(item) {
-      const old = this.defaultCat.get(item[0]);
-      this.defaultCat.set(item[0], item[1]);
+      // const old = this.defaultCat.get(item[0]);
+      const old = this.defaultValues[[item[0]]];
+      // this.defaultCat.set(item[0], item[1]);
+      this.defaultValues[[item[0]]] = item[1];
       if (this.row && this.col) {
         if (old !== item[0]) {
           (async () => {
             this.isSpinnerOn = true;
             this.log = "追加読み込み中";
-            await this.reloadStats(this.defaultCat, this);
+            // await this.reloadStats(this.defaultCat, this);
+            await this.reloadStats(this.defaultValues, this);
             this.isSpinnerOn = false;
             this.log = "追加読み込み完了";
           })();
