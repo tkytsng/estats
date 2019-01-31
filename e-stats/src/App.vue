@@ -410,7 +410,7 @@ export default {
       const statid = this.statid;
       let vm = this;
       vm.isLoadedTableData = false;
-      const tableDatadataBuffer = [];
+      let tableDatadataBuffer = [];
       let total = 0;
 
       // パラメータセット
@@ -488,15 +488,20 @@ export default {
       };
 
       const statRef = await firebase.firestore().collection(`stat${statid}`);
-      const queryRef = await statRef
+      const stats = await statRef
         .where(`rowId`, "==", this.rowId)
         .where(`colId`, `==`, this.colId)
         .where(`defaultValues`, `==`, this.defaultValues)
         .get();
 
-      await console.log(queryRef);
+      if (!stats.empty && stats.size == 1) {
+        console.log(`データがありました`);
 
-      await getStats();
+        // console.log(stats.docs[0].data());
+        tableDatadataBuffer.push = stats.docs[0].data().table;
+      } else {
+        await getStats();
+      }
 
       if (tableDatadataBuffer) {
         // vm.dataInfo = await tableDatadataBuffer;
