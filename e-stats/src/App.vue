@@ -411,6 +411,7 @@ export default {
       let vm = this;
       vm.isLoadedTableData = false;
       let tableDatadataBuffer = [];
+      let table = [];
       let total = 0;
 
       // パラメータセット
@@ -487,6 +488,7 @@ export default {
         }
       };
 
+      // FireCloudからデータを探す
       const statRef = await firebase.firestore().collection(`stat${statid}`);
       const stats = await statRef
         .where(`rowId`, "==", this.rowId)
@@ -494,11 +496,19 @@ export default {
         .where(`defaultValues`, `==`, this.defaultValues)
         .get();
 
+      // ひとつだけ見つかった
       if (!stats.empty && stats.size == 1) {
         console.log(`データがありました`);
 
-        // console.log(stats.docs[0].data());
-        tableDatadataBuffer.push = stats.docs[0].data().table;
+        Object.entries(stats.docs[0].data().table).map(data => {
+          const key = data[0];
+          const value = data[1];
+          table[String(key)] = {
+            $: value["$"],
+            "@unit": value["@unit"]
+          };
+        });
+        console.log(table);
       } else {
         await getStats();
       }
@@ -506,11 +516,15 @@ export default {
       if (tableDatadataBuffer) {
         // vm.dataInfo = await tableDatadataBuffer;
         vm.log = `${total}件読み込みました`;
-        // console.log(tableDatadataBuffer);
+        console.log(tableDatadataBuffer);
 
         this.setTable(tableDatadataBuffer);
+      } else if (Object.keys(table).length > 0) {
+        vm.log = "データ読み込みました";
+        this.showTable(table);
       } else {
-        vm.log = "データが存在しません";
+        vm.log = "データを取得できませんでした";
+        console.log(table.length);
       }
 
       vm.isSpinnerOn = await false;
@@ -596,6 +610,33 @@ export default {
         tableData.push(cols);
       }
       // console.timeEnd("createTable");
+
+      this.tableData = tableData;
+      this.currentChartColorHue = 0;
+    },
+    showTable(table) {
+      const getValue = (ri, ci, table) => {
+        let retVal = table[[ri + ci]];
+        delete table[[ri + ci]];
+
+        if (retVal) {
+          retVal.value = retVal["$"];
+          if (retVal["$"]) retVal.tooltip = retVal["$"];
+          if (retVal["@unit"]) retVal.tooltip += retVal["@unit"];
+        } else retVal = { value: "n/a" };
+        return retVal;
+      };
+
+      // テーブル表示用の配列を作成
+      let tableData = [];
+      for (const r of this.row) {
+        let cols = [];
+        cols.push({ value: r["@name"] });
+        for (let c of this.col) {
+          cols.push(getValue(r["@code"], c["@code"], table));
+        }
+        tableData.push(cols);
+      }
 
       this.tableData = tableData;
       this.currentChartColorHue = 0;
