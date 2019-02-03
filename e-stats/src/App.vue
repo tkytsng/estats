@@ -134,7 +134,8 @@
 </template>
 
 <script>
-import debounce from "lodash/debounce";
+// import debounce from "lodash/debounce";
+import axios from "axios";
 
 const urlEstatStatListJson =
   "https://api.e-stat.go.jp/rest/2.1/app/json/getStatsList";
@@ -411,7 +412,6 @@ export default {
       let vm = this;
       vm.isLoadedTableData = false;
       let tableDatadataBuffer = [];
-      let table = [];
       let total = 0;
 
       // パラメータセット
@@ -488,6 +488,7 @@ export default {
         }
       };
 
+      // (async () => {
       // FireCloudからデータを探す
       const statRef = await firebase.firestore().collection(`stat${statid}`);
       const stats = await statRef
@@ -496,46 +497,55 @@ export default {
         .where(`defaultValues`, `==`, this.defaultValues)
         .get();
 
+      const table = await {};
       // ひとつだけ見つかった
       if (!stats.empty && stats.size == 1) {
         console.log(`データがありました`);
 
-        Object.entries(stats.docs[0].data().table).map(data => {
+        await console.log(table);
+        await Object.entries(stats.docs[0].data().table).map(data => {
+          // console.log(data);
           const key = data[0];
           const value = data[1];
-          table[String(key)] = {
+
+          table[[key.toString()]] = {
             $: value["$"],
             "@unit": value["@unit"]
           };
+          // console.log(table[key.toString()]);
         });
-        console.log(table);
       } else {
         await getStats();
       }
+      // console.log(table);
 
-      if (tableDatadataBuffer) {
+      if (tableDatadataBuffer.length) {
         // vm.dataInfo = await tableDatadataBuffer;
         vm.log = `${total}件読み込みました`;
         console.log(tableDatadataBuffer);
 
         this.setTable(tableDatadataBuffer);
       } else if (Object.keys(table).length > 0) {
+        console.log(table);
         vm.log = "データ読み込みました";
         this.showTable(table);
       } else {
         vm.log = "データを取得できませんでした";
         console.log(table.length);
       }
+      // })();
 
       vm.isSpinnerOn = await false;
     },
     // テーブルを表示
     setTable: function(datas) {
+      console.log(`setTable`);
       const statid = this.statid;
 
       const getValue = (ri, ci, table) => {
-        let retVal = table[[ri + ci]];
-        delete table[[ri + ci]];
+        console.log(`getValue`);
+        let retVal = JSON.parse(JSON.stringify(table[[ri + ci]]));
+        // delete table[[ri + ci]];
 
         if (retVal) {
           retVal.value = retVal["$"];
@@ -615,9 +625,9 @@ export default {
       this.currentChartColorHue = 0;
     },
     showTable(table) {
+      console.log(`showTable`);
       const getValue = (ri, ci, table) => {
-        let retVal = table[[ri + ci]];
-        delete table[[ri + ci]];
+        let retVal = JSON.parse(JSON.stringify(table[[ri + ci]]));
 
         if (retVal) {
           retVal.value = retVal["$"];
