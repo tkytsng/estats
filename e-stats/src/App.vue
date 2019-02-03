@@ -136,6 +136,10 @@
 <script>
 // import debounce from "lodash/debounce";
 import axios from "axios";
+import UIkit from "uikit";
+import Icons from "uikit/dist/js/uikit-icons";
+
+UIkit.use(Icons);
 
 const urlEstatStatListJson =
   "https://api.e-stat.go.jp/rest/2.1/app/json/getStatsList";
@@ -497,13 +501,13 @@ export default {
         .where(`defaultValues`, `==`, this.defaultValues)
         .get();
 
-      const table = await {};
+      const table = {};
       // ひとつだけ見つかった
       if (!stats.empty && stats.size == 1) {
         console.log(`データがありました`);
 
-        await console.log(table);
-        await Object.entries(stats.docs[0].data().table).map(data => {
+        // await console.log(table);
+        Object.entries(stats.docs[0].data().table).map(data => {
           // console.log(data);
           const key = data[0];
           const value = data[1];
@@ -512,7 +516,6 @@ export default {
             $: value["$"],
             "@unit": value["@unit"]
           };
-          // console.log(table[key.toString()]);
         });
       } else {
         await getStats();
@@ -526,12 +529,12 @@ export default {
 
         this.setTable(tableDatadataBuffer);
       } else if (Object.keys(table).length > 0) {
-        console.log(table);
+        // console.log(table);
         vm.log = "データ読み込みました";
         this.showTable(table);
       } else {
         vm.log = "データを取得できませんでした";
-        console.log(table.length);
+        // console.log(table.length);
       }
       // })();
 
@@ -541,33 +544,9 @@ export default {
     setTable: function(datas) {
       console.log(`setTable`);
       const statid = this.statid;
-
-      const getValue = (ri, ci, table) => {
-        console.log(`getValue`);
-        let retVal = JSON.parse(JSON.stringify(table[[ri + ci]]));
-        // delete table[[ri + ci]];
-
-        if (retVal) {
-          retVal.value = retVal["$"];
-          if (retVal["$"]) retVal.tooltip = retVal["$"];
-          if (retVal["@unit"]) retVal.tooltip += retVal["@unit"];
-          // if (retVal["@time"])
-          //   retVal.tooltip += `\n${new Date(
-          //     retVal["@time"].substr(0, 4)
-          //   ).getFullYear()}年`;
-        } else retVal = { value: "n/a" };
-        return retVal;
-      };
-
       this.chartData = null;
-
-      // let tableMap = new Map();
       const table = {};
 
-      // console.time("createMap");
-      // let defaultCat = this.defaultCat;
-
-      // let datas = this.dataInfo
       for (const data of datas) {
         let g = {};
         g["$"] = data["$"];
@@ -615,7 +594,7 @@ export default {
         cols.push({ value: r["@name"] });
         for (let c of this.col) {
           // cols.push(getValue(r["@code"], c["@code"], tableMap));
-          cols.push(getValue(r["@code"], c["@code"], table));
+          cols.push(this.getTableValue(r["@code"], c["@code"], table));
         }
         tableData.push(cols);
       }
@@ -626,16 +605,6 @@ export default {
     },
     showTable(table) {
       console.log(`showTable`);
-      const getValue = (ri, ci, table) => {
-        let retVal = JSON.parse(JSON.stringify(table[[ri + ci]]));
-
-        if (retVal) {
-          retVal.value = retVal["$"];
-          if (retVal["$"]) retVal.tooltip = retVal["$"];
-          if (retVal["@unit"]) retVal.tooltip += retVal["@unit"];
-        } else retVal = { value: "n/a" };
-        return retVal;
-      };
 
       // テーブル表示用の配列を作成
       let tableData = [];
@@ -643,13 +612,25 @@ export default {
         let cols = [];
         cols.push({ value: r["@name"] });
         for (let c of this.col) {
-          cols.push(getValue(r["@code"], c["@code"], table));
+          cols.push(this.getTableValue(r["@code"], c["@code"], table));
         }
         tableData.push(cols);
       }
 
       this.tableData = tableData;
       this.currentChartColorHue = 0;
+    },
+    getTableValue(row, col, table) {
+      const value = table[[row + col]];
+      const retVal = { value: `n/a` };
+
+      if (table[[row + col]]) {
+        retVal.value = retVal["$"];
+        if (value["$"]) retVal.tooltip = retVal["$"];
+        if (value["@unit"]) retVal.tooltip += retVal["@unit"];
+      }
+
+      return retVal;
     },
     // テーブルをソート
     sortTable: function(colN) {
@@ -740,7 +721,9 @@ export default {
 };
 </script>
 
-<style>
+<style lang="less">
+@import "../node_modules/uikit/src/less/uikit.less";
+
 table {
   position: relative;
 }
