@@ -621,13 +621,13 @@ export default {
       this.currentChartColorHue = 0;
     },
     getTableValue(row, col, table) {
-      const value = table[[row + col]];
+      const value = table[[String(row) + String(col)]];
       const retVal = { value: `n/a` };
 
-      if (table[[row + col]]) {
-        retVal.value = retVal["$"];
-        if (value["$"]) retVal.tooltip = retVal["$"];
-        if (value["@unit"]) retVal.tooltip += retVal["@unit"];
+      if (value) {
+        // retVal.value = value["$"];
+        if (value["$"]) retVal.value = value["$"];
+        if (value["@unit"]) retVal.tooltip = `${value["$"]}${value["@unit"]}`;
       }
 
       return retVal;
