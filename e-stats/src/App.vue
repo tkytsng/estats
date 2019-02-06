@@ -1,13 +1,12 @@
 <template>
   <div id="estat" class="uk-container">
     <div class="search-box uk-section-small">
+      <SearchBox v-model="keyword" @send-keyword="getStatsList()"/>
       <p>
         <span class="uk-margin-small-right" v-if="isSpinnerOn" uk-spinner="ratio:0.8"></span>
         {{log}}
       </p>
       <p>{{result}}</p>
-
-      <SearchBox v-model="keyword" @send-keyword="getStatsList()"/>
     </div>
 
     <div v-if="tableInfo" class="table-info uk-section-small">
@@ -48,42 +47,56 @@
             <!-- テーブルの縦横選択ボタン -->
             <div class="uk-button-group uk-inline uk-margin-auto-vertical">
               <!-- 横 -->
+              <StatButton
+                btntext="YOKO"
+                :currentId="clOBJ['@id']"
+                :setId="colId"
+                :isColSet="isColSet"
+                @setRowCol="setRowCol(clOBJ,0)"
+              />
+              <!-- 縦 -->
+              <StatButton
+                btntext="TATE"
+                :currentId="clOBJ['@id']"
+                :setId="rowId"
+                :isColSet="isRowSet"
+                @setRowCol="setRowCol(clOBJ,1)"
+              />
               <!-- 選択済み -->
-              <button
+              <!-- <button
                 v-if="clOBJ['@id'] === colId"
                 class="uk-button uk-button-small uk-button-primary"
                 @click.stop="setRowCol([clOBJ,0])"
-              >yoko</button>
+              >yoko</button>-->
               <!-- 選択不可 -->
-              <button
+              <!-- <button
                 v-else-if="isColSet"
                 class="uk-button uk-button-small uk-button-default uk-disabled"
-              >yoko</button>
+              >yoko</button>-->
               <!-- 選択可 -->
-              <button
+              <!-- <button
                 v-else
                 class="uk-button uk-button-small uk-button-default"
                 @click.stop="setRowCol([clOBJ,0])"
-              >yoko</button>
-
+              >yoko</button>-->
               <!-- 縦 -->
               <!-- 選択済み -->
-              <button
+              <!-- <button
                 v-if="clOBJ['@id'] === rowId"
                 class="uk-button uk-button-small uk-button-primary"
                 @click.stop="setRowCol([clOBJ,1])"
-              >tate</button>
+              >tate</button>-->
               <!-- 選択不可 -->
-              <button
+              <!-- <button
                 v-else-if="isRowSet"
                 class="uk-button uk-button-small uk-button-default uk-disabled"
-              >tate</button>
+              >tate</button>-->
               <!-- 選択可 -->
-              <button
+              <!-- <button
                 v-else
                 class="uk-button uk-button-small uk-button-default"
                 @click.stop="setRowCol([clOBJ,1])"
-              >tate</button>
+              >tate</button>-->
             </div>
             <!-- 縦横以外の項目で表示するデータ -->
             <div>
@@ -152,6 +165,7 @@ const appId = "cc782ffaf5220d2bb34bab3562595c46c4b62843";
 
 import SearchBox from "./components/SearchBox.vue";
 import Log from "./components/Log.vue";
+import StatButton from "./components/StatButton.vue";
 import Chart from "./components/Chart.vue";
 import firebase from "@/firebase/firestore";
 
@@ -159,6 +173,7 @@ export default {
   name: "estats",
   components: {
     SearchBox,
+    StatButton,
     Log,
     Chart
   },
@@ -357,9 +372,11 @@ export default {
     },
     // テーブルを作成する行列を設定
     // 縦横ボタンで動作
-    setRowCol: function(item) {
-      const clOBJ = item[0];
-      const colrow = item[1];
+    setRowCol: function(clOBJ, colrow) {
+      // const clOBJ = item[0];
+      // const colrow = item[1];
+      console.log(clOBJ);
+      console.log(colrow);
 
       if (colrow === 0) {
         if (this.isColSet) {
