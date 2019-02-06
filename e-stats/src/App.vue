@@ -9,11 +9,6 @@
       <p>{{result}}</p>
     </div>
 
-    <div v-if="tableInfo" class="table-info uk-section-small">
-      <p class="stat-name">{{tableInfo.STATISTICS_NAME}}</p>
-      <span class="stat-about uk-text-meta">{{tableInfo.TITLE.$}}</span>
-      <!-- <p class="stat-about uk-text-meta">{{stats.TABLE_INF.TITLE.$}}</p> -->
-    </div>
     <!-- 統計表情報 -->
     <ul v-if="dataList" class="uk-section uk-list-divider">
       <li v-for="item in dataList" :key="item.id" @click="setView(item)">
@@ -31,6 +26,14 @@
     <div v-if="statsListNextKey !== null">
       <button class="uk-button uk-button-default" @click="getStatsList()">Tsugitoru</button>
       <span class="uk-margin-small-left" v-if="isSpinnerOn" uk-spinner="ratio:0.8"></span>
+    </div>
+
+    <div v-if="statInfo" class="table-info uk-section-small">
+      <h1 class="stat-name">{{statInfo.STATISTICS_NAME}}</h1>
+      <h2 class="stat-name">{{statInfo.STAT_NAME.$}}</h2>
+      <span class="stat-about uk-text-meta">{{statInfo.GOV_ORG.$}}</span>
+      <!-- <span class="stat-about uk-text-meta">{{statInfo.TITLE.$}}</span> -->
+      <!-- <p class="stat-about uk-text-meta">{{stats.TABLE_INF.TITLE.$}}</p> -->
     </div>
 
     <div v-if="classInfo" class="category uk-section-small">
@@ -62,41 +65,6 @@
                 :isColSet="isRowSet"
                 @setRowCol="setRowCol(clOBJ,1)"
               />
-              <!-- 選択済み -->
-              <!-- <button
-                v-if="clOBJ['@id'] === colId"
-                class="uk-button uk-button-small uk-button-primary"
-                @click.stop="setRowCol([clOBJ,0])"
-              >yoko</button>-->
-              <!-- 選択不可 -->
-              <!-- <button
-                v-else-if="isColSet"
-                class="uk-button uk-button-small uk-button-default uk-disabled"
-              >yoko</button>-->
-              <!-- 選択可 -->
-              <!-- <button
-                v-else
-                class="uk-button uk-button-small uk-button-default"
-                @click.stop="setRowCol([clOBJ,0])"
-              >yoko</button>-->
-              <!-- 縦 -->
-              <!-- 選択済み -->
-              <!-- <button
-                v-if="clOBJ['@id'] === rowId"
-                class="uk-button uk-button-small uk-button-primary"
-                @click.stop="setRowCol([clOBJ,1])"
-              >tate</button>-->
-              <!-- 選択不可 -->
-              <!-- <button
-                v-else-if="isRowSet"
-                class="uk-button uk-button-small uk-button-default uk-disabled"
-              >tate</button>-->
-              <!-- 選択可 -->
-              <!-- <button
-                v-else
-                class="uk-button uk-button-small uk-button-default"
-                @click.stop="setRowCol([clOBJ,1])"
-              >tate</button>-->
             </div>
             <!-- 縦横以外の項目で表示するデータ -->
             <div>
@@ -185,7 +153,7 @@ export default {
       log: "",
       result: null,
       dataList: null,
-      tableInfo: null,
+      statInfo: null,
       classInfo: null,
       dataInfo: null,
       tableData: null,
@@ -227,7 +195,7 @@ export default {
       // this.log = "Searching...";
       this.oldKeyword = "";
       this.dataList = null;
-      this.tableInfo = null;
+      this.statInfo = null;
       this.classInfo = null;
       this.dataInfo = null;
       this.tableData = null;
@@ -335,7 +303,9 @@ export default {
           console.log(`${statid}が見つかりました`);
           metaInfo = cf_stat.data();
         }
+        console.log(metaInfo);
 
+        this.statInfo = metaInfo.METADATA_INF.TABLE_INF;
         this.classInfo = metaInfo.METADATA_INF.CLASS_INF;
         const clsObj = metaInfo.METADATA_INF.CLASS_INF.CLASS_OBJ;
 
@@ -373,11 +343,6 @@ export default {
     // テーブルを作成する行列を設定
     // 縦横ボタンで動作
     setRowCol: function(clOBJ, colrow) {
-      // const clOBJ = item[0];
-      // const colrow = item[1];
-      console.log(clOBJ);
-      console.log(colrow);
-
       if (colrow === 0) {
         if (this.isColSet) {
           this.colId = null;

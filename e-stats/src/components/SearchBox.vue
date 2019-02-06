@@ -1,7 +1,11 @@
 <template>
   <div>
-    <input class="uk-input uk-form-medium uk-form-width-medium" :value="keyword"
-    @input="$emit('input', $event.target.value)" @keypress.enter="$emit('send-keyword')">
+    <input
+      class="uk-input uk-form-medium uk-form-width-medium"
+      :value="keyword"
+      @input="$emit('input', $event.target.value)"
+      @keypress.enter="$emit('send-keyword')"
+    >
     <button class="uk-button uk-button-primary" @click="$emit('send-keyword')">{{btntext}}</button>
   </div>
 </template>
@@ -10,15 +14,14 @@
 export default {
   name: "search-box",
   props: {
-    keyword: String,
+    keyword: String
     // btntext:String
   },
-  data:function() {
-    return{
+  data: function() {
+    return {
       // keyword:"",
-      btntext:"TokeToru"
-    }
-
+      btntext: "TOKETORU"
+    };
   }
 };
 </script>

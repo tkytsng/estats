@@ -20,19 +20,12 @@
 
 <script>
 export default {
-  name: "stat-button-yoko",
+  name: "stat-button",
   props: {
-    // keyword: String
     btntext: String,
     isColSet: Boolean,
     currentId: String,
     setId: String
-  },
-  data: function() {
-    return {
-      // keyword:"",
-      // btntext: "TokeToru"
-    };
   }
 };
 </script>
