@@ -28,9 +28,11 @@
       <span class="uk-margin-small-left" v-if="isSpinnerOn" uk-spinner="ratio:0.8"></span>
     </div>
 
+    <!-- 統計情報 -->
     <div v-if="statInfo" class="table-info uk-section-small">
       <h1 class="stat-name">{{statInfo.STATISTICS_NAME}}</h1>
       <h2 class="stat-name">{{statInfo.STAT_NAME.$}}</h2>
+      <h3 class="stat-name">{{statInfo.MAIN_CATEGORY.$}}</h3>
       <span class="stat-about uk-text-meta">{{statInfo.GOV_ORG.$}}</span>
       <!-- <span class="stat-about uk-text-meta">{{statInfo.TITLE.$}}</span> -->
       <!-- <p class="stat-about uk-text-meta">{{stats.TABLE_INF.TITLE.$}}</p> -->
